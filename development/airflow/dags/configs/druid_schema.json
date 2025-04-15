@@ -1,0 +1,50 @@
+{
+    "type": "index_parallel",
+    "spec": {
+        "ioConfig": {
+            "type": "index_parallel",
+            "inputSource": {
+                "type": "s3",
+                "uris": "list_minio_path",
+                "properties": {
+                    "endpoint": "MINIO_ENDPOINT",
+                    "accessKey": "MINIO_ACCESS_KEY",
+                    "secretKey": "MINIO_SECRET_KEY",
+                    "region": "MINIO_REGION_NAME",
+                    "forcePathStyle": true
+                }
+            },
+            "inputFormat": {
+                "type": "parquet",
+                "binaryAsString": false
+            },
+            "appendToExisting": false,
+            "dropExisting": true
+        },
+        "tuningConfig": {
+            "type": "index_parallel",
+            "logParseExceptions": true,
+            "partitionsSpec": {
+                "type": "dynamic"
+            }
+        },
+        "dataSchema": {
+            "dataSource": "data_source",
+            "timestampSpec": {
+                "column": "ingest_time",
+                "format": "auto"
+            },
+            "dimensionsSpec": {
+                "dimensions":[]
+            },
+            "granularitySpec": {
+                "segmentGranularity": "DAY",
+                "queryGranularity": "second",
+                "intervals": [
+                    "1900-01-01/9999-12-31"
+                ]
+            },
+            "transformSpec": {}
+        }
+    }
+}

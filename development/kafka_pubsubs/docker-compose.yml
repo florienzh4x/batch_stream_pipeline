@@ -1,0 +1,50 @@
+x-kafkapubsub-common:
+  &kafkapubsub-common
+  build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BASE_IMAGE=slim-bookworm
+        - PYTHON_VERSION=3.13
+        - PIP_ADDITIONAL_REQUIREMENTS=psycopg2-binary kafka-python pytz pandas boto3 minio pyarrow
+  image: kafka_pubsubs:latest
+  environment:
+    &trino-env
+    KAFKA_BOOTSTRAPS_SERVER: 172.18.0.24:9092
+    KAFKA_TOPIC: streaming
+    POSTGRES_HOST: postgresql_ecommerce
+    POSTGRES_PORT: 5432
+    POSTGRES_USER: admin
+    POSTGRES_PASSWORD: admin
+    POSTGRES_DB: ecommerce
+    POSTGRES_REPLICATION_SLOT_NAME: dimfact_slot
+    POSTGRES_REPLICATION_PLUGIN: wal2json
+    KAFKA_CONSUMER_GROUP: streaming_consumer
+    MINIO_ENDPOINT: minio:9000
+    MINIO_ACCESS_KEY: ecommerce
+    MINIO_SECRET_KEY: ecommerce
+    MINIO_BUCKET: ecommerce
+    MINIO_SECURE: False
+  networks:
+    - dimfact-network
+
+services:
+  kafkapublisher:
+    <<: *kafkapubsub-common
+    container_name: kafka_pg_publisher
+    hostname: kafka-publisher
+    environment:
+      <<: *trino-env
+    command: ["python", "kafka_publisher.py"]
+
+  kafkasubscriber:
+    <<: *kafkapubsub-common
+    container_name: kafka_pg_subscriber
+    hostname: kafka-subscriber
+    environment:
+      <<: *trino-env
+    command: ["python", "kafka_subscriber.py"]
+
+networks:
+  dimfact-network:
+    external: true

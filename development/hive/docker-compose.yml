@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: hive_postgres
+    environment:
+      POSTGRES_DB: metastore
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hivepassword
+    ports:
+      - "25432:5432"
+    volumes:
+      - hive_postgres_data:/var/lib/postgresql/data
+    networks:
+      - dimfact-network
+
+  hive-metastore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - HIVE_VERSION=4.0.1
+        - JARS_DIRECTORY=/opt/hive/lib
+        - HADOOP_AWS_JAR_VERSION=3.3.4
+        - MINIO_JAR_VERSION=8.5.17
+        - POSTGRESQL_JAR_VERSION=42.7.5
+        - AWS_BUNDLE_JAR_VERSION=1.12.782
+    image: hive_image
+    container_name: hive-metastore
+    environment:
+      SERVICE_NAME: metastore
+      HIVE_METASTORE_USER: hive
+      HIVE_METASTORE_PASSWORD: hivepassword
+      HIVE_METASTORE_DB_HOST: hive_postgres
+      HIVE_METASTORE_DB_NAME: metastore
+      HIVE_METASTORE_DB_TYPE: postgres
+    depends_on:
+      - postgres
+    ports:
+      - "29083:9083"
+    volumes:
+      - hive_metastore_data:/opt/hive/data
+      - "./conf/core-site.xml:/opt/hive/conf/core-site.xml"
+    networks:
+      - dimfact-network
+
+networks:
+  dimfact-network:
+    external: true
+
+volumes:
+  hive_postgres_data:
+  hive_metastore_data:

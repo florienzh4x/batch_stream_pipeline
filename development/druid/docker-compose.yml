@@ -1,0 +1,128 @@
+volumes:
+  metadata_data: {}
+  middle_var: {}
+  historical_var: {}
+  broker_var: {}
+  coordinator_var: {}
+  overlord_var: {}
+  router_var: {}
+  druid_shared: {}
+
+x-druid-common:
+  &druid-common
+  build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - DRUID_VERSION=32.0.1
+        - JARS_DIRECTORY=/opt/druid/extensions/hadoop-deps 
+        - HADOOP_AWS_JAR_VERSION=3.3.4
+        - MINIO_JAR_VERSION=8.5.17
+        - AWS_BUNDLE_JAR_VERSION=1.12.782
+  image: druid_image_jar
+  networks:
+    - dimfact-network
+  env_file:
+    - environment
+
+services:
+  postgresdruid:
+    container_name: postgres_druid
+    hostname: postgres_druid
+    image: postgres:17
+    ports:
+      - "25433:5432"
+    volumes:
+      - metadata_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=druid_password
+      - POSTGRES_USER=druid
+      - POSTGRES_DB=druid
+    networks:
+      - dimfact-network
+
+  coordinator:
+    <<: *druid-common
+    container_name: druid_coordinator
+    volumes:
+      - druid_shared:/opt/shared
+      - coordinator_var:/opt/druid/var
+    depends_on:
+      - postgresdruid
+    ports:
+      - "28081:8081"
+    command:
+      - coordinator
+
+  broker:
+    <<: *druid-common
+    container_name: druid_broker
+    volumes:
+      - broker_var:/opt/druid/var
+    depends_on:
+      - postgresdruid
+      - coordinator
+    ports:
+      - "28082:8082"
+    command:
+      - broker
+
+  historical:
+    <<: *druid-common
+    container_name: druid_historical
+    volumes:
+      - druid_shared:/opt/shared
+      - historical_var:/opt/druid/var
+    depends_on: 
+      - postgresdruid
+      - coordinator
+    ports:
+      - "28083:8083"
+    command:
+      - historical
+
+  middlemanager:
+    <<: *druid-common
+    container_name: druid_middlemanager
+    volumes:
+      - druid_shared:/opt/shared
+      - middle_var:/opt/druid/var
+    depends_on: 
+      - postgresdruid
+      - coordinator
+    ports:
+      - "28091:8091"
+      - "28100-28105:8100-8105"
+    command:
+      - middleManager
+
+  router:
+    <<: *druid-common
+    container_name: druid_router
+    volumes:
+      - router_var:/opt/druid/var
+    depends_on:
+      - postgresdruid
+      - coordinator
+    ports:
+      - "28888:8888"
+    command:
+      - router
+    
+  overlord:
+    <<: *druid-common
+    container_name: druid_overlord
+    volumes:
+      - druid_shared:/opt/shared
+      - overlord_var:/opt/druid/var
+    depends_on:
+      - postgresdruid
+      - coordinator
+    ports:
+      - "28090:8090"
+    command:
+      - overlord
+
+networks:
+  dimfact-network:
+    external: true

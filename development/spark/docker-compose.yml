@@ -1,0 +1,57 @@
+x-spark-common:
+  &spark-common
+  build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SPARK_VERSION=3.5.5-scala2.12-java17-python3-r-ubuntu
+        - JARS_DIRECTORY=/opt/spark/jars
+        - HADOOP_AWS_JAR_VERSION=3.3.4
+        - MINIO_JAR_VERSION=8.5.17
+        - POSTGRESQL_JAR_VERSION=42.7.5
+        - AWS_BUNDLE_JAR_VERSION=1.12.782
+  image: spark_image
+  environment:
+    &spark-env
+    SPARK_RPC_AUTHENTICATION_ENABLED: 'no'
+    SPARK_RPC_ENCRYPTION_ENABLED: 'no'
+    SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: 'no'
+    SPARK_SSL_ENABLED: 'no'
+    SPARK_USER: 'spark'
+  networks:
+    - dimfact-network
+
+services:
+  spark-master:
+    <<: *spark-common
+    container_name: spark-master
+    hostname: spark-master
+    command: >
+      bash -c "/opt/spark/bin/spark-class org.apache.spark.deploy.master.Master --host spark-master --webui-port 8080 --port 7077"
+    environment:
+      <<: *spark-env
+      SPARK_MODE: 'master'
+    ports:
+      - "9090:8080"
+      - "7077:7077"
+
+  spark-worker-1:
+    <<: *spark-common
+    container_name: spark-worker-1
+    hostname: spark-worker-1
+    ports:
+      - "9091:8081"
+    command: >
+      bash -c "/opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker --webui-port 8081 spark://spark-master:7077"
+    environment:
+      <<: *spark-env
+      SPARK_MODE: 'worker'
+      SPARK_MASTER_URL: 'spark://spark-master:7077'
+      SPARK_WORKER_CORES: 5
+      SPARK_WORKER_MEMORY: '5G'
+      SPARK_DRIVER_MEMORY: '5G'
+      SPARK_EXECUTOR_MEMORY: '5G'
+
+networks:
+  dimfact-network:
+    external: true

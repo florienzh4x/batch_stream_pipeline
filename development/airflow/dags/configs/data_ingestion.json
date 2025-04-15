@@ -1,0 +1,61 @@
+{
+    "general": {
+        "module_name": "ecommerce",
+        "tier": "tier-data-ingestion",
+        "source_type": "postgresql",
+        "jar_file_path": {
+            "postgresql" : "/opt/airflow/jars/postgresql-42.7.5.jar",
+            "minio": "/opt/airflow/jars/minio-8.5.17-all.jar",
+            "hadoop_aws": "/opt/airflow/jars/hadoop-aws-3.3.4.jar",
+            "aws_java_sdk": "/opt/airflow/jars/aws-java-sdk-bundle-1.12.782.jar"
+        },
+        "spark_job_script_path": "/opt/airflow/plugins/spark_job/source_to_raw.py",
+        "config_file_path": "/opt/airflow/dags/configs/data_ingestion.json",
+        "minio_bucket": "ecommerce",
+        "minio_path": "raw_data"
+    },
+    "tasks": [
+        {
+            "name": "transactions",
+            "source_db_name": "ecommerce",
+            "source_schema_name": "public",
+            "source_table_name": "transactions",
+            "destination_path": "transactions"
+        },
+        {
+            "name": "customers",
+            "source_db_name": "ecommerce",
+            "source_schema_name": "public",
+            "source_table_name": "customers",
+            "destination_path": "customers"
+        },
+        {
+            "name": "orders",
+            "source_db_name": "ecommerce",
+            "source_schema_name": "public",
+            "source_table_name": "orders",
+            "destination_path": "orders"
+        },
+        {
+            "name": "payments",
+            "source_db_name": "ecommerce",
+            "source_schema_name": "public",
+            "source_table_name": "payments",
+            "destination_path": "payments"
+        },
+        {
+            "name": "products",
+            "source_db_name": "ecommerce",
+            "source_schema_name": "public",
+            "source_table_name": "products",
+            "destination_path": "products"
+        },
+        {
+            "name": "stores",
+            "source_db_name": "ecommerce",
+            "source_schema_name": "public",
+            "source_table_name": "stores",
+            "destination_path": "stores"
+        }
+    ]
+}

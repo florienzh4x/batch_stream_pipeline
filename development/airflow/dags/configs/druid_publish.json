@@ -1,0 +1,28 @@
+{
+    "general": {
+        "module_name": "ecommerce",
+        "tier": "tier-druid-publishing",
+        "source_type": "minio",
+        "config_file_path": "/opt/airflow/dags/configs/druid_publish.json",
+        "schema_file_path": "/opt/airflow/dags/configs/druid_schema.json",
+        "minio_bucket": "ecommerce",
+        "minio_path": "curated_data"
+    },
+    "tasks": [
+        {
+            "name": "fact_store_sales",
+            "destination_table_name": "fact_store_sales",
+            "parquet_file_dir": "fact_store_sales"
+        },
+        {
+            "name": "dim_store_products",
+            "destination_table_name": "dim_store_products",
+            "parquet_file_dir": "dim_store_products"
+        },
+        {
+            "name": "dim_customers",
+            "destination_table_name": "dim_customers",
+            "parquet_file_dir": "dim_customers"
+        }
+    ]
+}

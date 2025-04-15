@@ -1,0 +1,60 @@
+{
+    "general": {
+        "module_name": "ecommerce",
+        "tier": "tier-data-curation",
+        "source_type": "minio",
+        "jar_file_path": {
+            "postgresql" : "/opt/airflow/jars/postgresql-42.7.5.jar",
+            "minio": "/opt/airflow/jars/minio-8.5.17-all.jar",
+            "hadoop_aws": "/opt/airflow/jars/hadoop-aws-3.3.4.jar",
+            "aws_java_sdk": "/opt/airflow/jars/aws-java-sdk-bundle-1.12.782.jar"
+        },
+        "spark_job_script_path": "/opt/airflow/plugins/spark_job/raw_to_curated.py",
+        "config_file_path": "/opt/airflow/dags/configs/curated_job.json",
+        "minio_bucket": "ecommerce",
+        "minio_path": "curated_data"
+    },
+    "tasks": [
+        {
+            "name": "dim_customers",
+            "destination_table_name": "dim_customers",
+            "sql_script_path": "/opt/airflow/dags/sql/dim_customers.sql",
+            "source_path": {
+                "customers": "raw_data/customers/"
+            },
+            "destination_path": "dim_customers",
+            "column_mapping": {
+                "customer_id": "str"
+            }
+        },
+        {
+            "name": "dim_store_products",
+            "destination_table_name": "dim_store_products",
+            "sql_script_path": "/opt/airflow/dags/sql/dim_store_products.sql",
+            "source_path": {
+                "products": "raw_data/products/",
+                "stores": "raw_data/stores/"
+            },
+            "destination_path": "dim_store_products",
+            "column_mapping": {
+                "customer_id": "str"
+            }
+        },
+        {
+            "name": "fact_store_sales",
+            "destination_table_name": "fact_store_sales",
+            "sql_script_path": "/opt/airflow/dags/sql/fact_store_sales.sql",
+            "source_path": {
+                "transactions": "raw_data/transactions/",
+                "stores": "raw_data/stores/",
+                "orders": "raw_data/orders/",
+                "payments": "raw_data/payments/",
+                "products": "raw_data/products/"
+            },
+            "destination_path": "fact_store_sales",
+            "column_mapping": {
+                "customer_id": "str"
+            }
+        }
+    ]
+}

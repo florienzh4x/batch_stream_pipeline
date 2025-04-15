@@ -1,0 +1,11 @@
+{
+    "DRUID_HOST": "http://druid_router:8888",
+    "MINIO_ACCESS_KEY": "ecommerce",
+    "MINIO_ENDPOINT": "172.18.0.3:9000",
+    "MINIO_SECRET_KEY": "ecommerce",
+    "PG_HOST": "postgresql_ecommerce",
+    "PG_PASSWORD": "admin",
+    "PG_PORT": 5432,
+    "PG_USER": "admin",
+    "PG_DBNAME": "ecommerce"
+}

@@ -1,0 +1,48 @@
+x-trino-common:
+  &trino-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      - KEYSTORE_PASSWORD=trino123
+      - KEYSTORE_FILE=/etc/trino_keystore.jks
+      - TRINO_VERSION=474
+      - JARS_DIRECTORY=/usr/lib/trino/plugin/hive
+      - HADOOP_AWS_JAR_VERSION=3.3.4
+      - MINIO_JAR_VERSION=8.5.17
+      - AWS_BUNDLE_JAR_VERSION=1.12.782
+      - POSTGRESQL_JAR_VERSION=42.7.5
+  image: trino_ssl
+  networks:
+    - dimfact-network
+  environment:
+    &trino-env
+    TRINO_DISCOVERY_URI: http://trino-coordinator:8080
+
+services:
+  trino-coordinator:
+    <<: *trino-common
+    container_name: trino-coordinator
+    ports:
+      - "28080:8080"
+      - "28443:8443"
+    volumes:
+      - ./coordinator-config:/etc/trino
+    environment:
+      <<: *trino-env
+      TRINO_NODE_ID: coordinator
+
+  trino-worker-1:
+    <<: *trino-common
+    container_name: trino-worker-1
+    volumes:
+      - ./worker-config-1:/etc/trino
+    environment:
+      <<: *trino-env
+      TRINO_NODE_ID: worker1
+    depends_on:
+      - trino-coordinator
+
+networks:
+  dimfact-network:
+    external: true
